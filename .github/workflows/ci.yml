@@ -16,6 +16,7 @@ on:
   push:
     branches:
       - master
+      - "claude/**"
     paths-ignore:
       - ".github/**"
       - "docs/**"
