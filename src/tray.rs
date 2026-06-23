@@ -1,23 +1,50 @@
 use crate::client::translate;
 #[cfg(windows)]
 use crate::ipc::Data;
-#[cfg(windows)]
 use hbb_common::tokio;
 use hbb_common::{allow_err, log};
-use std::sync::{Arc, Mutex};
+use std::sync::{
+    atomic::{AtomicBool, Ordering},
+    Arc, Mutex,
+};
 #[cfg(windows)]
 use std::time::Duration;
 
-// The tray icon is hidden when the admin-deployed `hide-tray` builtin option is
-// set, or when the user enabled silent direct-IP access (`allow-silent-direct-access`).
-fn should_hide_tray() -> bool {
+// Absolute hide: admin-deployed `hide-tray` builtin option. The tray process
+// does not run at all (except the macOS event loop, kept for parity).
+fn tray_hard_hidden() -> bool {
     use hbb_common::config::keys;
     crate::ui_interface::get_builtin_option(keys::OPTION_HIDE_TRAY) == "Y"
-        || crate::ui_interface::get_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS) == "Y"
+}
+
+// Silent direct-IP access hides the tray by default, but a connection may ask to
+// override silent mode, in which case the icon is shown while the override is
+// active (see `force_show_tray` queried over IPC from the running server).
+fn tray_silent_hidden() -> bool {
+    use hbb_common::config::keys;
+    crate::ui_interface::get_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS) == "Y"
+}
+
+// Whether the tray icon should currently be visible.
+fn tray_should_show(force_show: bool) -> bool {
+    !tray_hard_hidden() && (!tray_silent_hidden() || force_show)
+}
+
+// Poll the running server for the live "force show tray" signal. Returns false
+// if the server is unreachable (e.g. not running yet).
+#[tokio::main(flavor = "current_thread")]
+async fn query_force_show_tray() -> bool {
+    matches!(
+        crate::ipc::get_config("force_show_tray").await,
+        Ok(Some(ref v)) if v == "Y"
+    )
 }
 
 pub fn start_tray() {
-    if should_hide_tray() {
+    // When silent mode is on we still run the event loop (with a hidden icon) so
+    // that an override connection can make the icon appear at runtime. Only the
+    // absolute admin "hide-tray" suppresses the tray process entirely.
+    if tray_hard_hidden() {
         #[cfg(not(target_os = "macos"))]
         {
             return;
@@ -101,6 +128,20 @@ fn make_tray() -> hbb_common::ResultType<()> {
     #[cfg(windows)]
     let (ipc_sender, ipc_receiver) = std::sync::mpsc::channel::<Data>();
 
+    // Live "force show tray" state, polled from the running server so an override
+    // connection can make the icon appear even while silent mode is enabled.
+    let force_show = Arc::new(AtomicBool::new(false));
+    {
+        let force_show = force_show.clone();
+        std::thread::spawn(move || loop {
+            let v = query_force_show_tray();
+            force_show.store(v, Ordering::SeqCst);
+            std::thread::sleep(std::time::Duration::from_secs(1));
+        });
+    }
+    // Track the last applied visibility to avoid redundant updates.
+    let mut last_show = !tray_silent_hidden();
+
     let open_func = move || {
         if cfg!(not(feature = "flutter")) {
             crate::run_me::<&str>(vec![]).ok();
@@ -146,11 +187,13 @@ fn make_tray() -> hbb_common::ResultType<()> {
         if let tao::event::Event::NewEvents(tao::event::StartCause::Init) = event {
             // for fixing https://github.com/rustdesk/rustdesk/discussions/10210#discussioncomment-14600745
             // so we start tray, but not to show it
-            if should_hide_tray() {
+            if tray_hard_hidden() {
                 return;
             }
             // We create the icon once the event loop is actually running
             // to prevent issues like https://github.com/tauri-apps/tray-icon/issues/90
+            let show = tray_should_show(force_show.load(Ordering::SeqCst));
+            last_show = show;
             let tray = TrayIconBuilder::new()
                 .with_menu(Box::new(tray_menu.clone()))
                 .with_tooltip(tooltip(0))
@@ -158,7 +201,12 @@ fn make_tray() -> hbb_common::ResultType<()> {
                 .with_icon_as_template(true) // mac only
                 .build();
             match tray {
-                Ok(tray) => _tray_icon = Arc::new(Mutex::new(Some(tray))),
+                Ok(tray) => {
+                    // Apply the initial visibility (hidden while silent mode is on
+                    // and no override session is active).
+                    allow_err!(tray.set_visible(show));
+                    _tray_icon = Arc::new(Mutex::new(Some(tray)))
+                }
                 Err(err) => {
                     log::error!("Failed to create tray icon: {}", err);
                 }
@@ -172,6 +220,15 @@ fn make_tray() -> hbb_common::ResultType<()> {
 
                 let rl = CFRunLoopGetMain();
                 CFRunLoopWakeUp(rl);
+            }
+        }
+
+        // Re-evaluate tray visibility (silent mode vs. an active override session).
+        let show = tray_should_show(force_show.load(Ordering::SeqCst));
+        if show != last_show {
+            last_show = show;
+            if let Some(t) = _tray_icon.lock().unwrap().as_ref() {
+                allow_err!(t.set_visible(show));
             }
         }
 

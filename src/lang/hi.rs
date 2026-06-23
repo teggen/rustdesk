@@ -398,6 +398,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Hide connection management window", "कनेक्शन प्रबंधन विंडो छुपाएं"),
         ("hide_cm_tip", "केवल तभी छुपाएं जब पासवर्ड से कनेक्शन की अनुमति हो"),
         ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Wayland समर्थन अभी परीक्षण मोड में है"),
         ("Right click to select tabs", "टैब चुनने के लिए राइट क्लिक करें"),
         ("Skipped", "छोड़ दिया गया"),

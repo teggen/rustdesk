@@ -1,7 +1,7 @@
 From c69ef691370d24b8e19e10ac6b11b703adf831ef Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Tue, 23 Jun 2026 00:02:53 +0000
-Subject: [PATCH] config: add OPTION_ALLOW_SILENT_DIRECT_ACCESS key
+Subject: [PATCH 1/2] config: add OPTION_ALLOW_SILENT_DIRECT_ACCESS key
 
 New server-side option `allow-silent-direct-access`. When enabled, incoming
 direct-IP (LAN) connections run the connection manager with no UI and the tray

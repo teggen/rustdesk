@@ -315,6 +315,8 @@ pub enum Data {
         block_input: bool,
         privacy_mode: bool,
         from_switch: bool,
+        #[serde(default)]
+        prevent_close: bool,
     },
     ChatMessage {
         text: String,
@@ -867,6 +869,21 @@ async fn handle(data: Data, stream: &mut Connection) {
                     } else {
                         None
                     };
+                } else if name == "force_show_tray" {
+                    // Live signal for the tray process: a connection has asked to
+                    // override silent mode and keep the tray icon visible.
+                    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+                    {
+                        value = Some(if crate::server::tray_should_force_show() {
+                            "Y".to_owned()
+                        } else {
+                            "N".to_owned()
+                        });
+                    }
+                    #[cfg(any(target_os = "android", target_os = "ios"))]
+                    {
+                        value = Some("N".to_owned());
+                    }
                 } else if name == "voice-call-input" {
                     value = crate::audio_service::get_voice_call_input_device();
                 } else if name == "unlock-pin" {

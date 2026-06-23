@@ -830,6 +830,7 @@ class Client {
   bool privacyMode = false;
   bool disconnected = false;
   bool fromSwitch = false;
+  bool preventClose = false;
   bool inVoiceCall = false;
   bool incomingVoiceCall = false;
 
@@ -859,6 +860,7 @@ class Client {
     privacyMode = json['privacy_mode'] ?? privacyMode;
     disconnected = json['disconnected'];
     fromSwitch = json['from_switch'];
+    preventClose = json['prevent_close'] ?? false;
     inVoiceCall = json['in_voice_call'];
     incomingVoiceCall = json['incoming_voice_call'];
   }
@@ -884,6 +886,7 @@ class Client {
     data['privacy_mode'] = privacyMode;
     data['disconnected'] = disconnected;
     data['from_switch'] = fromSwitch;
+    data['prevent_close'] = preventClose;
     data['in_voice_call'] = inVoiceCall;
     data['incoming_voice_call'] = incomingVoiceCall;
     return data;

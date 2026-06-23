@@ -398,6 +398,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Hide connection management window", "Göm hanteringsfönster"),
         ("hide_cm_tip", "Tillåt att gömma endast om accepterande sessioner med lösenord och permanenta lösenord"),
         ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Stödet för Wayland är på experimentstadiet. Använd X11 om du behöver obevakad åtkomst."),
         ("Right click to select tabs", "Högerklicka för att välja flikar"),
         ("Skipped", "Hoppade över"),
