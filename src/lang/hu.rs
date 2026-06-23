@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Hozzáférés kérése az eszközéhez"),
         ("Hide connection management window", "Kapcsolatkezelő ablak elrejtése"),
         ("hide_cm_tip", "Ez csak akkor lehetséges, ha a hozzáférés állandó jelszóval történik."),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "A Wayland-támogatás csak kísérleti jellegű. Használja az X11-et, ha felügyelet nélküli hozzáférésre van szüksége."),
         ("Right click to select tabs", "Jobb klikk a lapok kiválasztásához"),
         ("Skipped", "Kihagyott"),

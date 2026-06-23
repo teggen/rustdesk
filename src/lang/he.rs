@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "בקשת גישה למכשיר שלך"),
         ("Hide connection management window", "הסתר חלון ניהול חיבורים"),
         ("hide_cm_tip", "אפשר הסתרה רק אם מקבלים הפעלות דרך סיסמה ומשתמשים בסיסמה קבועה"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "תמיכה ב-Wayland נמצאת בשלב ניסיוני, אנא השתמש ב-X11 אם אתה זקוק לגישה ללא ליווי מהצד המרוחק"),
         ("Right click to select tabs", "לחץ לחיצה ימנית כדי לבחור לשוניות"),
         ("Skipped", "דולג"),

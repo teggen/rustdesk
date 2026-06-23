@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "તમારા ઉપકરણના એક્સેસ માટે વિનંતી"),
         ("Hide connection management window", "કનેક્શન મેનેજમેન્ટ વિન્ડો છુપાવો"),
         ("hide_cm_tip", "જો પાસવર્ડ દ્વારા કનેક્શન હોય તો જ છુપાવો"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "Wayland સપોર્ટ હજુ પ્રાયોગિક ધોરણે છે"),
         ("Right click to select tabs", "ટેબ્સ પસંદ કરવા રાઇટ ક્લિક કરો"),
         ("Skipped", "રહેવા દીધું (Skipped)"),

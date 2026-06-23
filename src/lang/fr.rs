@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Demande l’accès à votre appareil"),
         ("Hide connection management window", "Cacher la fenêtre de gestion de la connexion"),
         ("hide_cm_tip", "Requiert d’accepter les sessions via mot de passe avec un mot de passe permanent"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "La prise en charge de Wayland est en phase expérimentale, veuillez utiliser X11 si vous avez besoin d’un accès non assisté."),
         ("Right click to select tabs", "Clic droit pour sélectionner les onglets"),
         ("Skipped", "Ignoré"),

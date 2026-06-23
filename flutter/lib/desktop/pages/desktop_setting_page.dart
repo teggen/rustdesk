@@ -1396,6 +1396,24 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
 
         return tmpWrapper();
       }(),
+      () {
+        // Silent mode: hide the connection-manager window and tray icon for
+        // incoming direct-IP (LAN) connections.
+        bool enabled = option2bool(
+            kOptionDirectServer, bind.mainGetOptionSync(key: kOptionDirectServer));
+        return Offstage(
+          offstage: !enabled,
+          child: Tooltip(
+            message: translate('silent_direct_access_tip'),
+            child: _OptionCheckBox(
+              context,
+              'Silent for direct IP access',
+              kOptionAllowSilentDirectAccess,
+              enabled: enabled && !locked,
+            ).marginOnly(left: _kContentHSubMargin - 6),
+          ),
+        );
+      }(),
     ];
   }
 

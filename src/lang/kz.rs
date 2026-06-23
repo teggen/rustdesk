@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Құрылғыңызға қолжетімділік сұрау"),
         ("Hide connection management window", "Қосылымды басқару терезесін жасыру"),
         ("hide_cm_tip", "Тек сештерді құпия сөз арқылы қабылдағанда және тұрақты құпия сөзді қолданғанда ғана жасыруға рұқсат ету"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "Wayland қолдауы эксперименттік сатыда, қадағалаусыз қолжетімділік қажет болса X11 қолданыңыз."),
         ("Right click to select tabs", "Бөлімшелерді таңдау үшін оң жақ батырмамен шертіңіз"),
         ("Skipped", "Өткізіп жіберілді"),

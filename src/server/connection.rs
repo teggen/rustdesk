@@ -229,6 +229,7 @@ struct StartCmIpcPara {
     tx_from_cm: mpsc::UnboundedSender<ipc::Data>,
     rx_desktop_ready: mpsc::Receiver<()>,
     tx_cm_stream_ready: mpsc::Sender<()>,
+    from_direct_ip: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -408,10 +409,16 @@ impl Connection {
         id: i32,
         server: super::ServerPtrWeak,
         control_permissions: Option<ControlPermissions>,
+        // Whether this connection came in through the direct-IP listener
+        // (`direct_server`). Used to scope "silent" behaviour to direct/LAN access.
+        from_direct_ip: bool,
     ) {
         // Android is not supported yet, so we always set control_permissions to None.
         #[cfg(target_os = "android")]
         let control_permissions = None;
+        // The silent direct-access path is desktop-only; consume the flag elsewhere.
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        let _ = from_direct_ip;
         let _raii_id = raii::ConnectionID::new(id);
         let _raii_control_permissions_id =
             raii::ControlPermissionsID::new(id, &control_permissions);
@@ -518,6 +525,7 @@ impl Connection {
                 tx_from_cm,
                 rx_desktop_ready,
                 tx_cm_stream_ready,
+                from_direct_ip,
             }),
             auto_disconnect_timer: None,
             authed_conn_id: None,
@@ -2345,6 +2353,7 @@ impl Connection {
                     p.tx_from_cm,
                     p.rx_desktop_ready,
                     p.tx_cm_stream_ready,
+                    p.from_direct_ip,
                 )
                 .await
                 {
@@ -5268,6 +5277,7 @@ async fn start_ipc(
     tx_from_cm: mpsc::UnboundedSender<ipc::Data>,
     mut _rx_desktop_ready: mpsc::Receiver<()>,
     tx_stream_ready: mpsc::Sender<()>,
+    from_direct_ip: bool,
 ) -> ResultType<()> {
     use hbb_common::anyhow::anyhow;
 
@@ -5283,6 +5293,14 @@ async fn start_ipc(
         && linux_desktop_manager::is_headless();
     #[cfg(not(target_os = "linux"))]
     let headless_cm = false;
+    // Silent mode: for direct-IP (LAN) connections, run the connection manager
+    // without a UI when `allow-silent-direct-access` is enabled. This suppresses
+    // the connect/disconnect/file-transfer window for those sessions.
+    let silent_direct_cm = from_direct_ip
+        && config::option2bool(
+            keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS,
+            &Config::get_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS),
+        );
     let mut stream = None;
     if !headless_cm {
         if let Ok(s) = crate::ipc::connect(1000, "_cm").await {
@@ -5293,6 +5311,10 @@ async fn start_ipc(
         #[allow(unused_mut)]
         #[allow(unused_assignments)]
         let mut args = vec!["--cm"];
+        // Silent direct-IP access: launch the connection manager without a UI.
+        if silent_direct_cm {
+            args = vec!["--cm-no-ui"];
+        }
         #[allow(unused_mut)]
         #[cfg(target_os = "linux")]
         let mut user = None;

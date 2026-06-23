@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "നിങ്ങളുടെ ഉപകരണം ആക്‌സസ് ചെയ്യാൻ അനുമതി ചോദിക്കുന്നു"),
         ("Hide connection management window", "കണക്ഷൻ മാനേജ്‌മെന്റ് വിൻഡോ മറയ്ക്കുക"),
         ("hide_cm_tip", "പാസ്‌വേഡ് വഴിയുള്ള കണക്ഷൻ ആണെങ്കിൽ മാത്രം മറയ്ക്കുക"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "Wayland പിന്തുണ പരീക്ഷണാടിസ്ഥാനത്തിലാണ്"),
         ("Right click to select tabs", "ടാബുകൾ തിരഞ്ഞെടുക്കാൻ വലത് ക്ലിക്ക് ചെയ്യുക"),
         ("Skipped", "ഒഴിവാക്കി"),

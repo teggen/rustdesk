@@ -534,6 +534,24 @@ pub fn core_main() -> Option<Vec<String>> {
                 println!("Installation and administrative privileges required!");
             }
             return None;
+        } else if args[0] == "--silent" || args[0] == "--no-silent" {
+            // Convenience toggles for `allow-silent-direct-access`: stay silent
+            // (no connection-manager window, no tray icon) for direct-IP/LAN
+            // connections. Mirror the `--option` permission/disabled checks.
+            if is_cli_setting_change_disabled() {
+                println!("Settings are disabled!");
+                return None;
+            }
+            if crate::platform::is_installed() && is_root() {
+                let value = if args[0] == "--silent" { "Y" } else { "" };
+                crate::ipc::set_option(
+                    hbb_common::config::keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS,
+                    value,
+                );
+            } else {
+                println!("Installation and administrative privileges required!");
+            }
+            return None;
         } else if args[0] == "--assign" {
             if config::Config::no_register_device() {
                 println!("Cannot assign an unregistrable device!");

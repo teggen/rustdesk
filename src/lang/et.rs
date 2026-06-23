@@ -397,6 +397,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Taotle oma seadmele juurdepääsu"),
         ("Hide connection management window", "Peida ühenduse haldamise aken"),
         ("hide_cm_tip", "Luba varjamine ainult siis, kui parooliga seansse võetakse vastu ning kasutatakse püsivat parooli."),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
         ("wayland_experiment_tip", "Waylandi tugi on katsetusjärgus, järelvalveta juurdepääsu vajadusel palun kasuta X11."),
         ("Right click to select tabs", "Paremklõpsa vahekaartide valimiseks"),
         ("Skipped", "Vahelejäetud"),
