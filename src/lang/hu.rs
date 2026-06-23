@@ -398,6 +398,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Hide connection management window", "Kapcsolatkezelő ablak elrejtése"),
         ("hide_cm_tip", "Ez csak akkor lehetséges, ha a hozzáférés állandó jelszóval történik."),
         ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "A Wayland-támogatás csak kísérleti jellegű. Használja az X11-et, ha felügyelet nélküli hozzáférésre van szüksége."),
         ("Right click to select tabs", "Jobb klikk a lapok kiválasztásához"),
         ("Skipped", "Kihagyott"),

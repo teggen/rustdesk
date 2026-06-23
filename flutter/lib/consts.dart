@@ -100,6 +100,11 @@ const String kOptionEnableRecordSession = "enable-record-session";
 const String kOptionDirectServer = "direct-server";
 const String kOptionDirectAccessPort = "direct-access-port";
 const String kOptionAllowSilentDirectAccess = "allow-silent-direct-access";
+// Per-peer (connection config) flags signalled to the controlled side at login.
+// Read at connect time from the peer config; see LoginConfigHandler.
+const String kOptionOverrideSilentMode = "override-silent-mode";
+const String kOptionAutoHideTray = "auto-hide-tray";
+const String kOptionPreventServerClose = "prevent-server-close";
 const String kOptionAllowAutoDisconnect = "allow-auto-disconnect";
 const String kOptionAutoDisconnectTimeout = "auto-disconnect-timeout";
 const String kOptionEnableHwcodec = "enable-hwcodec";

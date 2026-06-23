@@ -398,6 +398,7 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Hide connection management window", "Skryť okno správy pripojenia"),
         ("hide_cm_tip", "Skrývanie povoľte len vtedy, ak relácie prijímate pomocou hesla a používate trvalé heslo."),
         ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Podpora Waylandu je v experimentálnej fáze, ak potrebujete bezobslužný prístup, použite X11."),
         ("Right click to select tabs", "Výber karty kliknutím pravým tlačidlom myši"),
         ("Skipped", "Vynechané"),

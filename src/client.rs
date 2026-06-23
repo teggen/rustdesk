@@ -2732,6 +2732,10 @@ impl LoginConfigHandler {
             .into(),
             hwid,
             avatar,
+            // Per-connection silent-mode / close controls signalled to the peer.
+            override_silent_mode: !self.get_option("override-silent-mode").is_empty(),
+            auto_hide_tray: !self.get_option("auto-hide-tray").is_empty(),
+            prevent_close: !self.get_option("prevent-server-close").is_empty(),
             ..Default::default()
         };
         match self.conn_type {
