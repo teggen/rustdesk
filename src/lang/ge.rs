@@ -397,6 +397,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "თქვენს მოწყობილობაზე წვდომის მოთხოვნა"),
         ("Hide connection management window", "კავშირის მართვის ფანჯრის დამალვა"),
         ("hide_cm_tip", "დამალვის დაშვება, თუ სესიები მიიღება პაროლით ან გამოიყენება მუდმივი პაროლი"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Wayland-ის მხარდაჭერა ექსპერიმენტულ ეტაპზეა, გამოიყენეთ X11, თუ გჭირდებათ ავტომატური წვდომა."),
         ("Right click to select tabs", "ჩანართების არჩევა მარჯვენა ღილაკით"),
         ("Skipped", "გამოტოვებულია"),

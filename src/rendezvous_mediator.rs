@@ -902,6 +902,7 @@ async fn direct_server(server: ServerPtr) {
                             addr,
                             false,
                             None, // Direct connections don't have control_permissions
+                            true, // Came in through the direct-IP listener
                         )
                         .await
                     );
@@ -979,6 +980,7 @@ async fn udp_nat_listen(
             peer_addr_v4,
             true,
             control_permissions,
+            false,
         )
         .await?;
         Ok(())

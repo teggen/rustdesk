@@ -181,6 +181,7 @@ async fn accept_connection_(
             addr,
             secure,
             control_permissions,
+            false,
         )
         .await?;
     }
@@ -193,6 +194,7 @@ pub async fn create_tcp_connection(
     addr: SocketAddr,
     secure: bool,
     control_permissions: Option<ControlPermissions>,
+    from_direct_ip: bool,
 ) -> ResultType<()> {
     let mut stream = stream;
     let id = server.write().unwrap().get_new_id();
@@ -266,6 +268,7 @@ pub async fn create_tcp_connection(
         id,
         Arc::downgrade(&server),
         control_permissions,
+        from_direct_ip,
     )
     .await;
     Ok(())
@@ -334,7 +337,7 @@ async fn create_relay_connection_(
         ..Default::default()
     });
     stream.send(&msg_out).await?;
-    create_tcp_connection(server, stream, peer_addr, secure, control_permissions).await?;
+    create_tcp_connection(server, stream, peer_addr, secure, control_permissions, false).await?;
     Ok(())
 }
 

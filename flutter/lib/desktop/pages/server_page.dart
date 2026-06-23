@@ -1019,21 +1019,42 @@ class _CmControlPanel extends StatelessWidget {
             textColor: Colors.white,
           ),
         ),
-        Row(
-          children: [
-            Expanded(
-              child: buildButton(context,
-                  color: Colors.redAccent,
-                  onClick: handleDisconnect,
-                  text: 'Disconnect',
-                  icon: Icon(
-                    Icons.link_off_rounded,
-                    color: Colors.white,
-                    size: 14,
-                  ),
-                  textColor: Colors.white),
-            ),
-          ],
+        // The peer can forbid closing the session from this (server) side.
+        Offstage(
+          offstage: !client.preventClose,
+          child: Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(Icons.lock_outline_rounded,
+                  color: Colors.grey, size: 14),
+              SizedBox(width: 4),
+              Flexible(
+                child: Text(
+                  translate('close_prevented_by_peer_tip'),
+                  style: TextStyle(color: Colors.grey, fontSize: 12),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Offstage(
+          offstage: client.preventClose,
+          child: Row(
+            children: [
+              Expanded(
+                child: buildButton(context,
+                    color: Colors.redAccent,
+                    onClick: handleDisconnect,
+                    text: 'Disconnect',
+                    icon: Icon(
+                      Icons.link_off_rounded,
+                      color: Colors.white,
+                      size: 14,
+                    ),
+                    textColor: Colors.white),
+              ),
+            ],
+          ),
         )
       ],
     ).marginOnly(bottom: buttonBottomMargin);

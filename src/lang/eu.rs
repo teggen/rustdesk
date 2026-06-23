@@ -397,6 +397,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Eskatu sarrera zure gailura"),
         ("Hide connection management window", "Ezkutatu konexio kudeatze leihoa"),
         ("hide_cm_tip", "Utzi ezkutatzen saioak pasahitzarekin onartzen badira eta pasahitza betirakoa bada"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Wayland euskarria oraindik fase esperimentalean dago, mesedez, erabili X11 arretarik gabeko sarrera behar baduzu."),
         ("Right click to select tabs", "Eskuineko klika fitxak hautatzeko"),
         ("Skipped", "Saltatuta"),

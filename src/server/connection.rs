@@ -139,6 +139,48 @@ pub static CLICK_TIME: AtomicI64 = AtomicI64::new(0);
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 pub static MOUSE_MOVE_TIME: AtomicI64 = AtomicI64::new(0);
 
+// Tray "force show" state, used to override silent mode for specific sessions.
+// A connection that signalled `override_silent_mode` keeps the tray icon visible
+// while it is active. When such a session ends, the icon is hidden again only if
+// the session also signalled `auto_hide_tray`; otherwise it stays visible
+// (sticky) until the service restarts.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+static TRAY_OVERRIDE_ACTIVE: std::sync::atomic::AtomicUsize =
+    std::sync::atomic::AtomicUsize::new(0);
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+static TRAY_STICKY_SHOW: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn tray_force_show_add() {
+    TRAY_OVERRIDE_ACTIVE.fetch_add(1, Ordering::SeqCst);
+}
+
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+fn tray_force_show_remove(auto_hide: bool) {
+    if !auto_hide {
+        TRAY_STICKY_SHOW.store(true, Ordering::SeqCst);
+    }
+    // saturating decrement
+    let mut cur = TRAY_OVERRIDE_ACTIVE.load(Ordering::SeqCst);
+    while cur > 0 {
+        match TRAY_OVERRIDE_ACTIVE.compare_exchange_weak(
+            cur,
+            cur - 1,
+            Ordering::SeqCst,
+            Ordering::SeqCst,
+        ) {
+            Ok(_) => break,
+            Err(c) => cur = c,
+        }
+    }
+}
+
+/// Whether the tray icon should be force-shown despite silent mode.
+#[cfg(not(any(target_os = "android", target_os = "ios")))]
+pub fn tray_should_force_show() -> bool {
+    TRAY_OVERRIDE_ACTIVE.load(Ordering::SeqCst) > 0 || TRAY_STICKY_SHOW.load(Ordering::SeqCst)
+}
+
 #[cfg(all(feature = "flutter", feature = "plugin_framework"))]
 #[cfg(not(any(target_os = "android", target_os = "ios")))]
 lazy_static::lazy_static! {
@@ -229,6 +271,7 @@ struct StartCmIpcPara {
     tx_from_cm: mpsc::UnboundedSender<ipc::Data>,
     rx_desktop_ready: mpsc::Receiver<()>,
     tx_cm_stream_ready: mpsc::Sender<()>,
+    from_direct_ip: bool,
 }
 
 #[derive(Debug, Copy, Clone, Eq, PartialEq)]
@@ -318,6 +361,10 @@ pub struct Connection {
     #[cfg(windows)]
     portable: PortableState,
     from_switch: bool,
+    // Whether this connection has incremented the tray "force show" counter
+    // (i.e. it signalled `override_silent_mode` and is authorized).
+    #[cfg(not(any(target_os = "android", target_os = "ios")))]
+    tray_force_show_added: bool,
     voice_call_request_timestamp: Option<NonZeroI64>,
     voice_calling: bool,
     options_in_login: Option<OptionMessage>,
@@ -408,10 +455,16 @@ impl Connection {
         id: i32,
         server: super::ServerPtrWeak,
         control_permissions: Option<ControlPermissions>,
+        // Whether this connection came in through the direct-IP listener
+        // (`direct_server`). Used to scope "silent" behaviour to direct/LAN access.
+        from_direct_ip: bool,
     ) {
         // Android is not supported yet, so we always set control_permissions to None.
         #[cfg(target_os = "android")]
         let control_permissions = None;
+        // The silent direct-access path is desktop-only; consume the flag elsewhere.
+        #[cfg(any(target_os = "android", target_os = "ios"))]
+        let _ = from_direct_ip;
         let _raii_id = raii::ConnectionID::new(id);
         let _raii_control_permissions_id =
             raii::ControlPermissionsID::new(id, &control_permissions);
@@ -503,6 +556,8 @@ impl Connection {
             #[cfg(windows)]
             portable: Default::default(),
             from_switch: false,
+            #[cfg(not(any(target_os = "android", target_os = "ios")))]
+            tray_force_show_added: false,
             audio_sender: None,
             voice_call_request_timestamp: None,
             voice_calling: false,
@@ -518,6 +573,7 @@ impl Connection {
                 tx_from_cm,
                 rx_desktop_ready,
                 tx_cm_stream_ready,
+                from_direct_ip,
             }),
             auto_disconnect_timer: None,
             authed_conn_id: None,
@@ -628,11 +684,17 @@ impl Connection {
                             }
                         }
                         ipc::Data::Close => {
-                            conn.chat_unanswered = false; // seen
-                            conn.file_transferred = false; //seen
-                            conn.send_close_reason_no_retry("").await;
-                            conn.on_close("connection manager", true).await;
-                            break;
+                            // The client may forbid closing this session from the
+                            // controlled (server) side.
+                            if conn.lr.prevent_close {
+                                log::info!("Ignored connection-manager close: prevent_close is set by the peer");
+                            } else {
+                                conn.chat_unanswered = false; // seen
+                                conn.file_transferred = false; //seen
+                                conn.send_close_reason_no_retry("").await;
+                                conn.on_close("connection manager", true).await;
+                                break;
+                            }
                         }
                         ipc::Data::CmErr(e) => {
                             if e != "expected" {
@@ -1224,7 +1286,11 @@ impl Connection {
                     Some(data) = rx_from_cm.recv() => {
                         match data {
                             ipc::Data::Close => {
-                                bail!("Close requested from connection manager");
+                                if self.lr.prevent_close {
+                                    log::info!("Ignored connection-manager close (port forward): prevent_close is set by the peer");
+                                } else {
+                                    bail!("Close requested from connection manager");
+                                }
                             }
                             ipc::Data::CmErr(e) => {
                                 log::error!("Connection manager error: {e}");
@@ -1542,6 +1608,13 @@ impl Connection {
             return false;
         }
         self.authorized = true;
+        // If the client asked to override silent mode, keep the tray icon visible
+        // while this session is active.
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        if self.lr.override_silent_mode && !self.tray_force_show_added {
+            tray_force_show_add();
+            self.tray_force_show_added = true;
+        }
         let (conn_type, auth_conn_type) = if self.file_transfer.is_some() {
             (1, AuthConnType::FileTransfer)
         } else if self.port_forward_socket.is_some() {
@@ -1994,6 +2067,7 @@ impl Connection {
             block_input: self.block_input,
             privacy_mode: self.privacy_mode,
             from_switch: self.from_switch,
+            prevent_close: self.lr.prevent_close,
         });
     }
 
@@ -2337,6 +2411,9 @@ impl Connection {
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     fn try_start_cm_ipc(&mut self) {
         if let Some(p) = self.start_cm_ipc_para.take() {
+            // The client can ask to override silent mode for this connection, in
+            // which case the connection manager is started with its UI.
+            let override_silent_mode = self.lr.override_silent_mode;
             tokio::spawn(async move {
                 #[cfg(windows)]
                 let tx_from_cm_clone = p.tx_from_cm.clone();
@@ -2345,6 +2422,8 @@ impl Connection {
                     p.tx_from_cm,
                     p.rx_desktop_ready,
                     p.tx_cm_stream_ready,
+                    p.from_direct_ip,
+                    override_silent_mode,
                 )
                 .await
                 {
@@ -4622,6 +4701,12 @@ impl Connection {
             return;
         }
         self.closed = true;
+        // Release the tray "force show" hold taken for an override session.
+        #[cfg(not(any(target_os = "android", target_os = "ios")))]
+        if self.tray_force_show_added {
+            tray_force_show_remove(self.lr.auto_hide_tray);
+            self.tray_force_show_added = false;
+        }
         // If voice A,B -> C, and A,B has voice call
         // B disconnects, C will reset the voice call input.
         //
@@ -5268,6 +5353,8 @@ async fn start_ipc(
     tx_from_cm: mpsc::UnboundedSender<ipc::Data>,
     mut _rx_desktop_ready: mpsc::Receiver<()>,
     tx_stream_ready: mpsc::Sender<()>,
+    from_direct_ip: bool,
+    override_silent_mode: bool,
 ) -> ResultType<()> {
     use hbb_common::anyhow::anyhow;
 
@@ -5283,6 +5370,16 @@ async fn start_ipc(
         && linux_desktop_manager::is_headless();
     #[cfg(not(target_os = "linux"))]
     let headless_cm = false;
+    // Silent mode: for direct-IP (LAN) connections, run the connection manager
+    // without a UI when `allow-silent-direct-access` is enabled. This suppresses
+    // the connect/disconnect/file-transfer window for those sessions, unless the
+    // connecting client asked to override silent mode for this connection.
+    let silent_direct_cm = from_direct_ip
+        && !override_silent_mode
+        && config::option2bool(
+            keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS,
+            &Config::get_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS),
+        );
     let mut stream = None;
     if !headless_cm {
         if let Ok(s) = crate::ipc::connect(1000, "_cm").await {
@@ -5293,6 +5390,10 @@ async fn start_ipc(
         #[allow(unused_mut)]
         #[allow(unused_assignments)]
         let mut args = vec!["--cm"];
+        // Silent direct-IP access: launch the connection manager without a UI.
+        if silent_direct_cm {
+            args = vec!["--cm-no-ui"];
+        }
         #[allow(unused_mut)]
         #[cfg(target_os = "linux")]
         let mut user = None;

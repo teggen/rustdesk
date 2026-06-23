@@ -1,0 +1,46 @@
+From 74ddd3e106ee2b787dbf3c710e12959f4ab40b13 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 23 Jun 2026 02:16:39 +0000
+Subject: [PATCH 2/2] proto: add per-connection silent-mode/close controls to
+ LoginRequest
+
+Add three client-signalled fields to LoginRequest:
+- override_silent_mode: show the connection-manager window and tray icon for
+  this session despite allow-silent-direct-access.
+- auto_hide_tray: hide the tray icon again when the session ends.
+- prevent_close: disable server-side close/disconnect actions for this session.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01BcNagxrmAH3TKAwqHvz6MF
+---
+ protos/message.proto | 14 ++++++++++++++
+ 1 file changed, 14 insertions(+)
+
+diff --git a/protos/message.proto b/protos/message.proto
+index 8b21368..a55602e 100644
+--- a/protos/message.proto
++++ b/protos/message.proto
+@@ -88,6 +88,20 @@ message LoginRequest {
+   string my_platform = 13;
+   bytes hwid = 14;
+   string avatar = 17;
++  // Silent-mode controls signalled by the connecting client to the controlled
++  // peer. They let a specific connection override the controlled side's
++  // "allow-silent-direct-access" behaviour and govern session-close handling.
++  //
++  // Show the connection-manager window and the tray icon for this session even
++  // when the controlled side is configured to stay silent for direct IP access.
++  bool override_silent_mode = 18;
++  // When this session ends, hide the tray icon again (return to silent). Only
++  // meaningful together with `override_silent_mode`.
++  bool auto_hide_tray = 19;
++  // Forbid closing/disconnecting this session from the controlled (server) side:
++  // the disconnect actions in the connection-manager UI are disabled and
++  // server-side close requests for this connection are ignored.
++  bool prevent_close = 20;
+ }
+ 
+ message Terminal {
+-- 
+2.43.0
+

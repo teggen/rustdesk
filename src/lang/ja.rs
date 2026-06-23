@@ -397,6 +397,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "デバイスへのアクセス要求"),
         ("Hide connection management window", "接続管理画面を隠す"),
         ("hide_cm_tip", "パスワードによるセッションを許可し、固定パスワードを使用する場合にのみ、管理画面の非表示を許可する。"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Wayland の対応は試験的なものです。無人アクセスを使用する場合はX11デスクトップをご利用ください。"),
         ("Right click to select tabs", "右クリックでタブを選択"),
         ("Skipped", "スキップ"),

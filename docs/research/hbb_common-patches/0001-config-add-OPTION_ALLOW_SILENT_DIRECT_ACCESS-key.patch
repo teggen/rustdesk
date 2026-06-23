@@ -1,0 +1,42 @@
+From c69ef691370d24b8e19e10ac6b11b703adf831ef Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Tue, 23 Jun 2026 00:02:53 +0000
+Subject: [PATCH 1/2] config: add OPTION_ALLOW_SILENT_DIRECT_ACCESS key
+
+New server-side option `allow-silent-direct-access`. When enabled, incoming
+direct-IP (LAN) connections run the connection manager with no UI and the tray
+icon is hidden. Registered in KEYS_SETTINGS so it round-trips through the
+options map, --option CLI, and custom-client overrides.
+
+Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01BcNagxrmAH3TKAwqHvz6MF
+---
+ src/config.rs | 5 +++++
+ 1 file changed, 5 insertions(+)
+
+diff --git a/src/config.rs b/src/config.rs
+index 8b8023b..72f8073 100644
+--- a/src/config.rs
++++ b/src/config.rs
+@@ -2919,6 +2919,10 @@ pub mod keys {
+     pub const OPTION_ALLOW_AUTO_DISCONNECT: &str = "allow-auto-disconnect";
+     pub const OPTION_AUTO_DISCONNECT_TIMEOUT: &str = "auto-disconnect-timeout";
+     pub const OPTION_ALLOW_ONLY_CONN_WINDOW_OPEN: &str = "allow-only-conn-window-open";
++    // Server-side: stay silent for incoming direct IP (LAN) connections.
++    // When enabled, direct-IP sessions show no connection-manager window
++    // (connect/disconnect/file-transfer) and the tray icon is hidden.
++    pub const OPTION_ALLOW_SILENT_DIRECT_ACCESS: &str = "allow-silent-direct-access";
+     pub const OPTION_ALLOW_AUTO_RECORD_INCOMING: &str = "allow-auto-record-incoming";
+     pub const OPTION_ALLOW_AUTO_RECORD_OUTGOING: &str = "allow-auto-record-outgoing";
+     pub const OPTION_VIDEO_SAVE_DIRECTORY: &str = "video-save-directory";
+@@ -3150,6 +3154,7 @@ pub mod keys {
+         OPTION_ALLOW_AUTO_DISCONNECT,
+         OPTION_AUTO_DISCONNECT_TIMEOUT,
+         OPTION_ALLOW_ONLY_CONN_WINDOW_OPEN,
++        OPTION_ALLOW_SILENT_DIRECT_ACCESS,
+         OPTION_ALLOW_AUTO_RECORD_INCOMING,
+         OPTION_ENABLE_ABR,
+         OPTION_ALLOW_REMOVE_WALLPAPER,
+-- 
+2.43.0
+

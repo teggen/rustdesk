@@ -397,6 +397,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "உங்கள் சாதனத்திற்கு அணுகல் கோரவும்"),
         ("Hide connection management window", "இணைப்பு மேலாண்மை சாளரத்தை மறை"),
         ("hide_cm_tip", "இணைப்பு_மேலாளர்_மறை_குறிப்பு"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "வேலேண்ட்_சோதனை_குறிப்பு"),
         ("Right click to select tabs", "தாவல்களைத் தேர்ந்தெடுக்க வலது கிளிக் செய்யவும்"),
         ("Skipped", "தவிர்க்கப்பட்டது"),

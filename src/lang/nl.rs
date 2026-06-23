@@ -397,6 +397,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Toegang tot uw toestel aanvragen"),
         ("Hide connection management window", "Verberg het venster voor verbindingsbeheer"),
         ("hide_cm_tip", "Dit kan alleen als de toegang via een permanent wachtwoord verloopt."),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Wayland ondersteuning is slechts experimenteel. Gebruik alstublieft X11 als u onbeheerde toegang nodig heeft."),
         ("Right click to select tabs", "Rechts klikken om tabbladen te selecteren"),
         ("Skipped", "Overgeslagen"),

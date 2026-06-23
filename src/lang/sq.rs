@@ -397,6 +397,8 @@ pub static ref T: std::collections::HashMap<&'static str, &'static str> =
         ("Request access to your device", "Kërko akses në pajisjejn tuaj"),
         ("Hide connection management window", "Fshih dritaren e menaxhimit të lidhjes"),
         ("hide_cm_tip", "Kjo është e mundur vetëm nëse aksesi bëhet nëpërmjet një fjalëkalimi të përhershëm"),
+        ("silent_direct_access_tip", "Stay silent for direct IP (LAN) connections: no connection window and no tray icon. Requires a permanent password; not compatible with manual accept (click) mode."),
+        ("close_prevented_by_peer_tip", "The peer has disabled closing this session from this side."),
         ("wayland_experiment_tip", "Mbështetja për Wayland është në fazë eksperimentale, ju lutemi përdorni X11 nëse keni nevojë për akses pa mbikëqyrje."),
         ("Right click to select tabs", "Klikoni me të djathtën për të zgjedhur skedat"),
         ("Skipped", "U kapërcye"),
