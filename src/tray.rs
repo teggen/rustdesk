@@ -32,10 +32,12 @@ fn tray_should_show(force_show: bool) -> bool {
 
 // Poll the running server for the live "force show tray" signal. Returns false
 // if the server is unreachable (e.g. not running yet).
-#[tokio::main(flavor = "current_thread")]
-async fn query_force_show_tray() -> bool {
+// `ipc::get_config` is itself `#[tokio::main]` (synchronous, runs its own
+// runtime), so this stays a plain blocking fn — wrapping it in another runtime
+// would panic with a nested-runtime error.
+fn query_force_show_tray() -> bool {
     matches!(
-        crate::ipc::get_config("force_show_tray").await,
+        crate::ipc::get_config("force_show_tray"),
         Ok(Some(ref v)) if v == "Y"
     )
 }
