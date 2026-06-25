@@ -884,6 +884,19 @@ async fn handle(data: Data, stream: &mut Connection) {
                     {
                         value = Some("N".to_owned());
                     }
+                } else if name == "silent_mode" {
+                    // Live silent-mode baseline for the tray process. The server
+                    // owns config, so this reflects a remote toggle immediately;
+                    // the tray polls it so its icon refreshes without a restart.
+                    value = Some(
+                        if Config::get_bool_option(
+                            config::keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS,
+                        ) {
+                            "Y".to_owned()
+                        } else {
+                            "N".to_owned()
+                        },
+                    );
                 } else if name == "voice-call-input" {
                     value = crate::audio_service::get_voice_call_input_device();
                 } else if name == "unlock-pin" {

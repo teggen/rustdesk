@@ -1986,6 +1986,13 @@ impl<T: InvokeUiSession> Remote<T> {
                     Some(misc::Union::FollowCurrentDisplay(d_idx)) => {
                         self.handler.set_current_display(d_idx);
                     }
+                    Some(misc::Union::SilentModeState(st)) => {
+                        self.handler.update_silent_mode_state(
+                            st.enabled,
+                            st.permitted,
+                            st.changed,
+                        );
+                    }
                     _ => {}
                 },
                 Some(message::Union::TestDelay(t)) => {

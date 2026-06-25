@@ -1344,6 +1344,45 @@ impl Connection {
         self.send(msg_out).await;
     }
 
+    // Remotely flip the persistent `allow-silent-direct-access` option over the
+    // control channel, then report the resulting state back to the controller.
+    //
+    // Gated by BOTH: the session must hold full-control (keyboard) permission AND
+    // the controlled machine must have opted in via `allow-remote-silent-toggle`.
+    // The change affects FUTURE connections (CM no-UI is decided at CM spawn) and
+    // the tray (refreshed within ~1s via the live `silent_mode` IPC poll); the
+    // current session's CM is intentionally not re-rendered.
+    async fn handle_set_silent_mode(&mut self, s: SetSilentMode) {
+        let permitted = self.keyboard
+            && Config::get_bool_option(keys::OPTION_ALLOW_REMOTE_SILENT_TOGGLE);
+        let mut changed = false;
+        if permitted && !s.query {
+            let cur = Config::get_bool_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS);
+            if cur != s.enable {
+                Config::set_option(
+                    keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS.to_owned(),
+                    if s.enable { "Y".to_owned() } else { "".to_owned() },
+                );
+                changed = true;
+            }
+        }
+        let enabled = Config::get_bool_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS);
+        log::info!(
+            "Remote silent-mode toggle from {}: permitted={permitted} enabled={enabled} changed={changed}",
+            self.lr.my_id,
+        );
+        let mut misc = Misc::new();
+        misc.set_silent_mode_state(SilentModeState {
+            enabled,
+            permitted,
+            changed,
+            ..Default::default()
+        });
+        let mut msg_out = Message::new();
+        msg_out.set_misc(misc);
+        self.send(msg_out).await;
+    }
+
     async fn check_privacy_mode_on(&mut self) -> bool {
         if privacy_mode::is_in_privacy_mode() {
             self.send_login_error("Someone turns on privacy mode, exit")
@@ -3431,6 +3470,9 @@ impl Connection {
                                 Err(e) => log::error!("Failed to restart: {}", e),
                             }
                         }
+                    }
+                    Some(misc::Union::SetSilentMode(s)) => {
+                        self.handle_set_silent_mode(s).await;
                     }
                     #[cfg(windows)]
                     Some(misc::Union::ElevationRequest(r)) => match r.union {

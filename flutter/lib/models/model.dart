@@ -134,6 +134,10 @@ class FfiModel with ChangeNotifier {
   RxBool waitForFirstImage = true.obs;
   bool isRefreshing = false;
 
+  // Controlled peer's persistent silent-mode state, reported over the control
+  // channel. null = unknown (not yet queried / peer too old to support it).
+  final RxnBool remoteSilentMode = RxnBool();
+
   Timer? timerScreenshot;
 
   Rect? get rect => _rect;
@@ -242,6 +246,17 @@ class FfiModel with ChangeNotifier {
 
     debugPrint('updatePermission: $_permissions');
     notifyListeners();
+  }
+
+  // Peer's reply to a remote silent-mode toggle/query.
+  handleSilentModeState(Map<String, dynamic> evt) {
+    final permitted = evt['permitted'] == 'true';
+    if (!permitted) {
+      remoteSilentMode.value = null;
+      showToast(translate('remote_silent_toggle_denied_tip'));
+      return;
+    }
+    remoteSilentMode.value = evt['enabled'] == 'true';
   }
 
   bool get keyboard => _permissions['keyboard'] != false;
@@ -361,6 +376,8 @@ class FfiModel with ChangeNotifier {
         Clipboard.setData(ClipboardData(text: evt['content']));
       } else if (name == 'permission') {
         updatePermission(evt, peerId);
+      } else if (name == 'silent_mode_state') {
+        handleSilentModeState(evt);
       } else if (name == 'chat_client_mode') {
         parent.target?.chatModel
             .receive(ChatModel.clientModeID, evt['text'] ?? '');
