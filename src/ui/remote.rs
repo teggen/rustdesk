@@ -375,6 +375,8 @@ impl InvokeUiSession for SciterHandler {
 
     fn portable_service_running(&self, _running: bool) {}
 
+    fn update_silent_mode_state(&self, _enabled: bool, _permitted: bool, _changed: bool) {}
+
     fn on_voice_call_started(&self) {
         self.call("onVoiceCallStart", &make_args!());
     }

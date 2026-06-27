@@ -565,6 +565,22 @@ impl<T: InvokeUiSession> Session<T> {
         self.send(Data::Message(msg));
     }
 
+    // Remotely flip the controlled machine's persistent silent-mode option over
+    // the control channel. `query == true` only requests the current state
+    // (used to seed the toolbar toggle) without changing anything. The peer
+    // replies with a `SilentModeState` handled in `io_loop`.
+    pub fn set_silent_mode(&self, enable: bool, query: bool) {
+        let mut misc = Misc::new();
+        misc.set_set_silent_mode(SetSilentMode {
+            enable,
+            query,
+            ..Default::default()
+        });
+        let mut msg_out = Message::new();
+        msg_out.set_misc(misc);
+        self.send(Data::Message(msg_out));
+    }
+
     #[cfg(all(feature = "flutter", feature = "plugin_framework"))]
     #[cfg(not(any(target_os = "android", target_os = "ios")))]
     pub fn send_plugin_request(&self, request: PluginRequest) {
@@ -1716,6 +1732,8 @@ pub trait InvokeUiSession: Send + Sync + Clone + 'static + Sized + Default {
     fn cancel_msgbox(&self, tag: &str);
     fn switch_back(&self, id: &str);
     fn portable_service_running(&self, running: bool);
+    // Controlled peer's reply to a remote silent-mode toggle/query.
+    fn update_silent_mode_state(&self, enabled: bool, permitted: bool, changed: bool);
     fn on_voice_call_started(&self);
     fn on_voice_call_closed(&self, reason: &str);
     fn on_voice_call_waiting(&self);

@@ -1414,6 +1414,24 @@ class _SafetyState extends State<_Safety> with AutomaticKeepAliveClientMixin {
           ),
         );
       }(),
+      () {
+        // Opt-in: let a connected operator with full control flip silent mode
+        // on/off remotely over the control channel.
+        bool enabled = option2bool(
+            kOptionDirectServer, bind.mainGetOptionSync(key: kOptionDirectServer));
+        return Offstage(
+          offstage: !enabled,
+          child: Tooltip(
+            message: translate('allow_remote_silent_toggle_tip'),
+            child: _OptionCheckBox(
+              context,
+              'Allow remote toggle of silent mode',
+              kOptionAllowRemoteSilentToggle,
+              enabled: enabled && !locked,
+            ).marginOnly(left: _kContentHSubMargin - 6),
+          ),
+        );
+      }(),
     ];
   }
 

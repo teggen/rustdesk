@@ -704,6 +704,18 @@ impl InvokeUiSession for FlutterHandler {
         self.push_event("permission", &[(name, &value.to_string())], &[]);
     }
 
+    fn update_silent_mode_state(&self, enabled: bool, permitted: bool, changed: bool) {
+        self.push_event(
+            "silent_mode_state",
+            &[
+                ("enabled", &enabled.to_string()),
+                ("permitted", &permitted.to_string()),
+                ("changed", &changed.to_string()),
+            ],
+            &[],
+        );
+    }
+
     // unused in flutter
     fn close_success(&self) {}
 

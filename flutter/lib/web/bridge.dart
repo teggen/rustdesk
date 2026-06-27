@@ -1283,6 +1283,15 @@ class RustdeskImpl {
     return Future(() => js.context.callMethod('setByName', ['restart']));
   }
 
+  Future<void> sessionSetSilentMode(
+      {required UuidValue sessionId,
+      required bool enable,
+      required bool query,
+      dynamic hint}) {
+    return Future(() => js.context.callMethod(
+        'setByName', ['set_silent_mode', jsonEncode({'enable': enable, 'query': query})]));
+  }
+
   String sessionGetAuditServerSync(
       {required UuidValue sessionId, required String typ, dynamic hint}) {
     return js.context.callMethod('getByName', ['audit_server', typ]);

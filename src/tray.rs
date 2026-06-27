@@ -25,9 +25,11 @@ fn tray_silent_hidden() -> bool {
     crate::ui_interface::get_option(keys::OPTION_ALLOW_SILENT_DIRECT_ACCESS) == "Y"
 }
 
-// Whether the tray icon should currently be visible.
-fn tray_should_show(force_show: bool) -> bool {
-    !tray_hard_hidden() && (!tray_silent_hidden() || force_show)
+// Whether the tray icon should currently be visible. `silent_hidden` is the live
+// silent-mode baseline (polled from the running server so a remote toggle takes
+// effect without a tray restart); `force_show` is the per-session override.
+fn tray_should_show(force_show: bool, silent_hidden: bool) -> bool {
+    !tray_hard_hidden() && (!silent_hidden || force_show)
 }
 
 // Poll the running server for the live "force show tray" signal. Returns false
@@ -40,6 +42,16 @@ fn query_force_show_tray() -> bool {
         crate::ipc::get_config("force_show_tray"),
         Ok(Some(ref v)) if v == "Y"
     )
+}
+
+// Live silent-mode baseline from the running server (which owns config, so it
+// reflects a remote toggle immediately). Falls back to the tray's local config
+// read if the server is unreachable (e.g. not running yet).
+fn query_silent_mode() -> bool {
+    match crate::ipc::get_config("silent_mode") {
+        Ok(Some(ref v)) => v == "Y",
+        _ => tray_silent_hidden(),
+    }
 }
 
 pub fn start_tray() {
@@ -133,16 +145,20 @@ fn make_tray() -> hbb_common::ResultType<()> {
     // Live "force show tray" state, polled from the running server so an override
     // connection can make the icon appear even while silent mode is enabled.
     let force_show = Arc::new(AtomicBool::new(false));
+    // Live silent-mode baseline, polled from the server so a remote toggle
+    // refreshes the icon without restarting the tray.
+    let silent_hidden = Arc::new(AtomicBool::new(tray_silent_hidden()));
     {
         let force_show = force_show.clone();
+        let silent_hidden = silent_hidden.clone();
         std::thread::spawn(move || loop {
-            let v = query_force_show_tray();
-            force_show.store(v, Ordering::SeqCst);
+            force_show.store(query_force_show_tray(), Ordering::SeqCst);
+            silent_hidden.store(query_silent_mode(), Ordering::SeqCst);
             std::thread::sleep(std::time::Duration::from_secs(1));
         });
     }
     // Track the last applied visibility to avoid redundant updates.
-    let mut last_show = !tray_silent_hidden();
+    let mut last_show = !silent_hidden.load(Ordering::SeqCst);
 
     let open_func = move || {
         if cfg!(not(feature = "flutter")) {
@@ -194,7 +210,10 @@ fn make_tray() -> hbb_common::ResultType<()> {
             }
             // We create the icon once the event loop is actually running
             // to prevent issues like https://github.com/tauri-apps/tray-icon/issues/90
-            let show = tray_should_show(force_show.load(Ordering::SeqCst));
+            let show = tray_should_show(
+                force_show.load(Ordering::SeqCst),
+                silent_hidden.load(Ordering::SeqCst),
+            );
             last_show = show;
             let tray = TrayIconBuilder::new()
                 .with_menu(Box::new(tray_menu.clone()))
@@ -226,7 +245,10 @@ fn make_tray() -> hbb_common::ResultType<()> {
         }
 
         // Re-evaluate tray visibility (silent mode vs. an active override session).
-        let show = tray_should_show(force_show.load(Ordering::SeqCst));
+        let show = tray_should_show(
+            force_show.load(Ordering::SeqCst),
+            silent_hidden.load(Ordering::SeqCst),
+        );
         if show != last_show {
             last_show = show;
             if let Some(t) = _tray_icon.lock().unwrap().as_ref() {

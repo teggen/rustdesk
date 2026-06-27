@@ -100,6 +100,9 @@ const String kOptionEnableRecordSession = "enable-record-session";
 const String kOptionDirectServer = "direct-server";
 const String kOptionDirectAccessPort = "direct-access-port";
 const String kOptionAllowSilentDirectAccess = "allow-silent-direct-access";
+// Controlled-side opt-in: allow a connected operator with full control to flip
+// silent mode on/off remotely over the control channel.
+const String kOptionAllowRemoteSilentToggle = "allow-remote-silent-toggle";
 // Per-peer (connection config) flags signalled to the controlled side at login.
 // Read at connect time from the peer config; see LoginConfigHandler.
 const String kOptionOverrideSilentMode = "override-silent-mode";

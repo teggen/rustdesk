@@ -537,6 +537,37 @@ List<TTextMenu> toolbarControls(BuildContext context, String id, FFI ffi) {
               showRestartRemoteDevice(pi, id, sessionId, ffi.dialogManager)),
     );
   }
+  // remote silent-mode toggle (requires full control on the controlled side)
+  if (isDefaultConn &&
+      !ffiModel.viewOnly &&
+      ffiModel.keyboard &&
+      (pi.platform == kPeerPlatformLinux ||
+          pi.platform == kPeerPlatformWindows ||
+          pi.platform == kPeerPlatformMacOS)) {
+    // Seed the current state from the peer (best-effort; ignored if unsupported).
+    bind.sessionSetSilentMode(sessionId: sessionId, enable: false, query: true);
+    v.add(
+      TTextMenu(
+        child: Obx(() => Row(children: [
+              Text(translate('Silent mode')),
+              Expanded(
+                  child: Align(
+                      alignment: Alignment.centerRight,
+                      child: Transform.scale(
+                          scale: 0.8,
+                          child: Checkbox(
+                            value: ffiModel.remoteSilentMode.value ?? false,
+                            onChanged: null,
+                          )))),
+            ])),
+        onPressed: () {
+          final cur = ffiModel.remoteSilentMode.value ?? false;
+          bind.sessionSetSilentMode(
+              sessionId: sessionId, enable: !cur, query: false);
+        },
+      ),
+    );
+  }
   // insertLock
   if (isDefaultConn && !ffiModel.viewOnly && ffi.ffiModel.keyboard) {
     v.add(
